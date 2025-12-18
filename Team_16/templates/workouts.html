@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}FitSmart AI — Workout Analyzer{% endblock %}
+
+{% block extra_css %}
+  <style>
+    :root {
+      --brand:#0fb15d;
+      --brand-dark:#0a8e48;
+      --accent:#3b82f6;
+      --accent-dark:#2563eb;
+      --muted:#6c757d;
+      --light-gray:#f8f9fa;
+      --border:#e5e7eb;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #dcfce7 0, #f8fdf9 40%, #eff6ff 100%);
+    }
+
+    .fs-card {
+      background: #ffffff;
+      color: #111827;
+      border-radius: 18px;
+      padding: 24px 26px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    .fs-card-soft {
+      background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+      border-radius: 18px;
+      padding: 22px 24px;
+      border: 1px solid rgba(209, 250, 229, 0.9);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.04);
+    }
+
+    .wk-title {
+      color: var(--brand);
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-align: left;
+      margin-bottom: 4px;
+    }
+
+    .wk-sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      font-size: 0.78rem;
+      color: #166534;
+      margin-bottom: 12px;
+    }
+
+    .pill span.label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+      color: #65a30d;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: block;
+      font-size: 0.88rem;
+      color: #111827;
+    }
+
+    .form-control,
+    .form-select {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .form-select-sm,
+    .form-control-sm {
+      padding-top: 0.35rem;
+      padding-bottom: 0.35rem;
+      font-size: 0.86rem;
+    }
+
+    .wk-btn {
+      background: linear-gradient(135deg, var(--brand), #22c55e);
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 14px 30px rgba(22, 163, 74, 0.4);
+    }
+
+    .wk-btn:hover {
+      background: linear-gradient(135deg, var(--brand-dark), #16a34a);
+      color: #fff;
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      background-color: #f9fafb;
+      padding: 12px;
+      border-radius: 10px;
+      border-left: 3px solid var(--brand);
+    }
+
+    .error {
+      color: #b91c1c;
+      margin-top: 10px;
+      background-color: #fef2f2;
+      padding: 10px;
+      border-radius: 8px;
+      border-left: 3px solid #dc2626;
+      font-size: 0.86rem;
+    }
+
+    video {
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    }
+
+    .reps {
+      font-size: 1rem;
+      margin-top: 12px;
+      color: #111827;
+      font-weight: 500;
+    }
+
+    .muted-small {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .how-list li + li {
+      margin-top: 4px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container my-4">
+    <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+      <div>
+        <h4 class="mb-1">Workout Analyzer</h4>
+        <p class="muted-small mb-0">
+          Upload a short workout clip and let FitSmart AI count clean reps using pose tracking.
+        </p>
+      </div>
+      <div class="muted-small">
+        <i class="bi bi-lightning-charge-fill text-warning me-1"></i>
+        Works best with 5–45 second clips and a stable camera.
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- LEFT: Upload + settings -->
+      <div class="col-lg-7">
+        <div class="fs-card">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <h1 class="wk-title mb-1">
+                <i class="bi bi-dumbbell me-2"></i>Workout Analyzer
+              </h1>
+              <p class="wk-sub mb-0">
+                Choose the exercise type, upload a clip, and get an annotated video with rep count.
+              </p>
+            </div>
+          </div>
+
+          <div class="pill">
+            <span class="label">selected</span>
+            <span>
+              {% if selected_workout %}
+                {{ selected_workout.replace('_', ' ').title() }}
+              {% else %}
+                Push-up
+              {% endif %}
+            </span>
+          </div>
+
+          <form action="{{ url_for('upload_workout') }}"
+                method="post"
+                enctype="multipart/form-data"
+                class="mt-2">
+            <div class="mb-2">
+              <label for="workout_type">Choose workout type</label>
+              <select id="workout_type"
+                      name="workout_type"
+                      class="form-select form-select-sm"
+                      required>
+                <option value="pushup" {% if selected_workout == 'pushup' %}selected{% endif %}>
+                  Push-up
+                </option>
+                <option value="squat" {% if selected_workout == 'squat' %}selected{% endif %}>
+                  Squat
+                </option>
+                <option value="pullup" {% if selected_workout == 'pullup' %}selected{% endif %}>
+                  Pull-up
+                </option>
+                <option value="jumping_jack" {% if selected_workout == 'jumping_jack' %}selected{% endif %}>
+                  Jumping Jack
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="video">Upload your workout video (MP4/AVI/MOV/MKV)</label>
+              <input type="file"
+                     id="video"
+                     name="video"
+                     accept="video/*"
+                     class="form-control form-control-sm"
+                     required>
+              <div class="muted-small mt-1">
+                Ideal: landscape orientation, steady camera, good lighting.
+              </div>
+            </div>
+
+            <button type="submit" class="wk-btn">
+              <i class="bi bi-magic"></i>
+              Analyze
+            </button>
+          </form>
+
+          <p class="note mt-3 mb-0">
+            Tips for best accuracy:<br>
+            • <strong>Push-ups & squats</strong> – record from the side so one half of your body is clearly visible.<br>
+            • <strong>Pull-ups</strong> – ensure the bar and upper body are always visible in frame.<br>
+            • <strong>Jumping jacks</strong> – keep your full body in frame from head to toe.<br>
+            • Avoid heavy motion blur and keep the background reasonably clean.
+          </p>
+
+          {% if error %}
+            <p class="error mt-3">{{ error }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- RIGHT: Result / How it works -->
+      <div class="col-lg-5">
+        {% if video_url %}
+          <div class="fs-card-soft h-100">
+            <h2 class="wk-title mb-2" style="font-size:1.15rem;">
+              Result
+            </h2>
+            <video controls class="mt-2 mb-2">
+              <source src="{{ video_url }}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+
+            <p class="reps">
+              Total reps counted:
+              <strong>{{ reps }}</strong>
+              {% if selected_workout == 'jumping_jack' %}
+                (Jumping Jacks)
+              {% elif selected_workout == 'pullup' %}
+                (Pull-ups)
+              {% elif selected_workout == 'squat' %}
+                (Squats)
+              {% else %}
+                (Push-ups)
+              {% endif %}
+            </p>
+
+            <p class="note mb-0">
+              Reps are estimated from body landmarks — for best consistency, keep the camera stable,
+              frame your full movement, and avoid cutting off the start or end of each rep.
+            </p>
+          </div>
+        {% else %}
+          <div class="fs-card-soft h-100">
+            <h2 class="wk-title mb-2" style="font-size:1.1rem;">
+              How it works
+            </h2>
+            <p class="muted-small mb-2">
+              The Workout Analyzer uses <strong>MediaPipe Pose</strong> to detect joints and track
+              body angles frame by frame.
+            </p>
+            <ul class="small how-list mb-3">
+              <li>Identifies key joints (shoulders, elbows, hips, knees, ankles, etc.).</li>
+              <li>Derives movement <em>stages</em> like up/down or open/closed using angles.</li>
+              <li>Counts clean transitions between stages as valid reps.</li>
+              <li>Draws pose landmarks and overlays feedback text on your video.</li>
+            </ul>
+            <p class="muted-small mb-0">
+              After upload, you’ll see an annotated video highlighting your movement and
+              a rep count summary for that set.
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
